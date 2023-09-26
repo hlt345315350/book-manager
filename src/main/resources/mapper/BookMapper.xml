@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hbnx.book.manager.mapper.BookMapper">
+
+    <resultMap id="BaseResultMap" type="com.hbnx.book.manager.entity.Book">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="author" column="author" jdbcType="VARCHAR"/>
+            <result property="isbn" column="isbn" jdbcType="VARCHAR"/>
+            <result property="name" column="name" jdbcType="VARCHAR"/>
+            <result property="pages" column="pages" jdbcType="INTEGER"/>
+            <result property="price" column="price" jdbcType="DOUBLE"/>
+            <result property="publish" column="publish" jdbcType="VARCHAR"/>
+            <result property="publishTime" column="publish_time" jdbcType="TIMESTAMP"/>
+            <result property="size" column="size" jdbcType="INTEGER"/>
+            <result property="translate" column="translate" jdbcType="VARCHAR"/>
+            <result property="type" column="type" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,author,isbn,
+        name,pages,price,
+        publish,publish_time,size,
+        translate,type
+    </sql>
+
+    <!-- 模糊查询 倒序 -->
+    <select id="findBookListByLike" resultMap="BaseResultMap" >
+        select * from book
+        <where>
+            <if test="_parameter != null and _parameter != ''">
+                and `name` like CONCAT('%',#{_parameter},'%') or `isbn` like CONCAT('%',#{_parameter},'%')
+            </if>
+        </where>
+        order by id desc
+    </select>
+
+
+    <update id="updateBook" parameterType="map">
+        update book
+        <set>
+            <if test="isbn != null and isbn != ''">
+                isbn = #{isbn},
+            </if>
+            <if test="name != null and name != ''">
+                `name` = #{name},
+            </if>
+            <if test="pages != null">
+                pages = #{pages},
+            </if>
+            <if test="translate != null and translate != ''">
+                `translate` = #{translate},
+            </if>
+            <if test="publish != null and publish != ''">
+                publish = #{publish},
+            </if>
+            <if test="price != null">
+                price = #{price},
+            </if>
+            <if test="size != null">
+                `size` = #{size},
+            </if>
+            <if test="type != null and type != ''">
+                `type` = #{type},
+            </if>
+            <if test="publishTime != null">
+                publish_time = #{publishTime},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+</mapper>

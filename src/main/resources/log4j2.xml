@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- status：定义log4j内部日志输出等级，monitorInterval : Log4j能够自动检测修改配置文件和重新配置本身, 设置间隔秒数 -->
+<configuration status="info" packages="com.hbnx.book.manager">
+    <!-- 定义日志名称和日志路径，日志路径生产环境可为绝对路径 -->
+    <Properties>
+        <Property name="fileName">hbnx-book-manager</Property>
+        <Property name="logFilePath">logs</Property>
+    </Properties>
+    <!-- 定义各种Appenders -->
+    <appenders>
+        <!-- 定义控制台Appender -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS}|%X{logId} |%p |%t |%m%n"/>
+        </Console>
+
+        <!-- 定义滚动文件Appender，filePattern定义了文件的打包格式以及打包路径：
+         1.根据时间格式，确定TimeBasedTriggeringPolicy中interval的时间单位
+         2.根据尾缀格式自动压缩打包，支持的压缩格式包括".gz",".zip", ".bz2", ".deflate", ".pack200", or ".xz",
+            其中bzip2, Deflate, Pack200 and XZ require Apache Commons Compress. In addition, XZrequires XZ for Java -->
+        <RollingFile name="RollingFileInfo" fileName="${logFilePath}/${fileName}.log"
+                     filePattern="${logFilePath}/${fileName}-%d{yyyy-MM-dd-HH}.log.gz">
+            <!--控制台只输出level及以上级别的信息（onMatch），其他的直接拒绝（onMismatch）-->
+            <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS}|%X{logId} |%p |%t |%m%n"/>
+            <!--定义触发机制：时间触发滚动方式，根据filePattern定义为每24小时滚动且打包一次 最大256MB -->
+            <Policies>
+                <TimeBasedTriggeringPolicy modulate="true" interval="24"/>
+                <SizeBasedTriggeringPolicy size="256 MB"/>
+            </Policies>
+            <!-- 定义滚动策略：删除30天以前的日志 -->
+            <DefaultRolloverStrategy>
+                <Delete basePath="${logFilePath}" maxDepth="1">
+                    <IfFileName glob="${fileName}-*"/>
+                    <IfLastModified age="30d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+        <RollingFile name="RollingFileError" fileName="${logFilePath}/${fileName}-error.log"
+                     filePattern="${logFilePath}/${fileName}-error-%d{yyyy-MM-dd-HH}.log.gz">
+            <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS}|%X{logId} |%p |%t|%F:%L| %m%n"/>
+            <!--定义触发机制：时间触发滚动方式，根据filePattern定义为每24小时滚动且打包一次 最大256MB-->
+            <Policies>
+                <TimeBasedTriggeringPolicy modulate="true" interval="24"/>
+                <SizeBasedTriggeringPolicy size="256 MB"/>
+            </Policies>
+        </RollingFile>
+    </appenders>
+
+    <!-- 定义各种日志记录器 -->
+    <loggers>
+        <!-- 定义日志记录器，比如可以定义第三方的日志记录器等 -->
+        <!--过滤掉spring和mybatis的一些无用的DEBUG信息-->
+        <logger name="org.springframework" level="error"/>
+        <logger name="org.mybatis" level="error"/>
+        <logger name="org.jboss.netty" level="error"/>
+
+        <!-- 定义异步Logger, 异步日志不能打印行号includeLocation="false" -->
+        <AsyncLogger name="com.hbnx.book.manager" level="info" includeLocation="false" additivity="false">
+            <AppenderRef ref="RollingFileInfo" />
+            <AppenderRef ref="Console" />
+        </AsyncLogger>
+
+        <Root level="error" includeLocation="true">
+            <AppenderRef ref="RollingFileError" />
+        </Root>
+    </loggers>
+</configuration>
